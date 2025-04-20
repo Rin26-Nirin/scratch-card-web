@@ -105,6 +105,28 @@
     canvas.addEventListener('mousedown', () => (isDrawing = true));
     canvas.addEventListener('mouseup', () => (isDrawing = false));
     canvas.addEventListener('mousemove', scratch);
+    
+    // รองรับการขูดบนโทรศัพท์
+canvas.addEventListener('touchstart', () => (isDrawing = true));
+canvas.addEventListener('touchend', () => (isDrawing = false));
+canvas.addEventListener('touchmove', (e) => {
+  if (!isDrawing) return;
+  e.preventDefault(); // ป้องกันการเลื่อนหน้าจอขณะขูด
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+
+  ctx.beginPath();
+  ctx.arc(x, y, 20, 0, 2 * Math.PI);
+  ctx.fill();
+
+  revealedPixels++;
+  if (revealedPixels > 500) {
+    canvas.style.display = 'none';
+  }
+});
+
 
     function scratch(e) {
       if (!isDrawing) return;
