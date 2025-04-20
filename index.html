@@ -64,7 +64,7 @@
 </head>
 <body>
   <h1>ขูดดูว่าคุณได้ตัวละครอะไร</h1>
-  <button onclick="revealCharacter()">สุ่มตัวละคร</button>
+  <button id="reveal-button" onclick="revealCharacter()" disabled>สุ่มตัวละคร</button>
 
   <div id="scratch-container">
     <img id="character-img" src="images/placeholder.jpg" alt="Character" />
@@ -84,6 +84,7 @@
     let currentScratchStage = 1; // เริ่มที่รอบแรก
     let revealedPixels1 = 0;
     let revealedPixels2 = 0;
+    let isRevealed = false; // ตัวแปรที่ใช้ตรวจสอบสถานะการสุ่ม
 
     const canvas1 = document.getElementById('scratch-canvas-1');
     const canvas2 = document.getElementById('scratch-canvas-2');
@@ -91,6 +92,7 @@
     const ctx2 = canvas2.getContext('2d');
     const img = document.getElementById('character-img');
     const container = document.getElementById('scratch-container');
+    const revealButton = document.getElementById('reveal-button');
 
     function playScratchSound() {
       scratchSound.currentTime = 0;
@@ -108,6 +110,8 @@
     }
 
     function revealCharacter() {
+      if (isRevealed) return; // หากสุ่มแล้วไม่ให้สุ่มซ้ำ
+
       const randomImg = images[Math.floor(Math.random() * images.length)];
       img.src = randomImg;
       img.style.display = 'block';
@@ -127,6 +131,9 @@
 
       // แสดงภาพซิลูเอต
       img.style.display = 'none';
+
+      isRevealed = true; // กำหนดว่าได้ทำการสุ่มแล้ว
+      revealButton.disabled = true; // ปิดปุ่มไม่ให้กดสุ่มซ้ำ
     }
 
     function handleScratch(e, canvas, ctx, stage) {
@@ -145,14 +152,13 @@
         revealedPixels1++;
         if (revealedPixels1 > 500) {
           canvas1.style.display = 'none';
-          currentScratchStage = 2;
+          currentScratchStage = 2; // ขูดเสร็จแล้ว เปลี่ยนไปที่รอบที่ 2
         }
       } else if (stage === 2) {
         revealedPixels2++;
         if (revealedPixels2 > 500) {
           canvas2.style.display = 'none';
-          // เผยภาพที่เหลือหลังจากขูดครบ
-          img.style.display = 'block';
+          img.style.display = 'block'; // เปิดเผยตัวละครที่สุ่ม
         }
       }
     }
