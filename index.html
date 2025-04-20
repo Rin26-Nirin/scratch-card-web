@@ -67,121 +67,116 @@
 
   <div id="scratch-container">
     <img id="character-img" src="" alt="Character" style="z-index: 1; display: none;" />
-    <canvas id="scratch-canvas-2" style="z-index: 2;"></canvas>
-    <canvas id="scratch-canvas-1" style="z-index: 3;"></canvas>
+    <canvas id="scratch-canvas-2" style="z-index: 2; display: none;"></canvas>
+    <canvas id="scratch-canvas-1" style="z-index: 3; display: none;"></canvas>
   </div>
 
-<audio
-    id="scratch-sound"
-    src="https://raw.githubusercontent.com/Rin26-Nirin/scratch-card-web/main/card_scratch.wav"
-    preload="auto"
-  ></audio>
+  <!-- Audio element for scratch sound -->
+  <audio id="scratch-sound" src="https://raw.githubusercontent.com/Rin26-Nirin/scratch-card-web/main/card_scratch.wav" preload="auto"></audio>
 
- <script>
-  const images = [
-    'https://i.pinimg.com/736x/ca/d1/91/cad191b61f65458fcc687c9874793122.jpg',
-    'https://i.pinimg.com/736x/8e/ac/e1/8eace192a4dca9dba5b25c6a8e7b2dc1.jpg',
-    'https://i.pinimg.com/736x/f3/72/77/f3727751489bd9a8fd41e770130d633c.jpg'
-  ];
+  <script>
+    const images = [
+      'https://i.pinimg.com/736x/ca/d1/91/cad191b61f65458fcc687c9874793122.jpg',
+      'https://i.pinimg.com/736x/8e/ac/e1/8eace192a4dca9dba5b25c6a8e7b2dc1.jpg',
+      'https://i.pinimg.com/736x/f3/72/77/f3727751489bd9a8fd41e770130d633c.jpg'
+    ];
 
-  const canvas1 = document.getElementById('scratch-canvas-1');
-  const canvas2 = document.getElementById('scratch-canvas-2');
-  const ctx1 = canvas1.getContext('2d');
-  const ctx2 = canvas2.getContext('2d');
-  const container = document.getElementById('scratch-container');
-  const img = document.getElementById('character-img');
+    const revealButton = document.getElementById('reveal-btn');
+    const img = document.getElementById('character-img');
+    const canvas1 = document.getElementById('scratch-canvas-1');
+    const canvas2 = document.getElementById('scratch-canvas-2');
+    const ctx1 = canvas1.getContext('2d');
+    const ctx2 = canvas2.getContext('2d');
+    const scratchSound = document.getElementById('scratch-sound');
+    const container = document.getElementById('scratch-container');
 
-  const scratchSound = document.getElementById('scratch-sound');
+    let isDrawing = false;
+    let currentScratchStage = 1;
+    let revealedPixels1 = 0;
+    let revealedPixels2 = 0;
+    let hasRevealed = false;
 
-  let isDrawing = false;
-  let currentScratchStage = 1;
-  let revealedPixels1 = 0;
-  let revealedPixels2 = 0;
-  let hasRevealed = false; // 👈 เพิ่มตัวแปรป้องกันการเล่นก่อนสุ่ม
+    // Hide canvases & image initially
+    window.onload = () => {
+      canvas1.style.display = 'none';
+      canvas2.style.display = 'none';
+      img.style.display = 'none';
+    };
 
-  // ซ่อน canvas และรูปตอนโหลด
-  window.onload = () => {
-    canvas1.style.display = 'none';
-    canvas2.style.display = 'none';
-    img.style.display = 'none';
-  };
+    function setupCanvas(ctx, canvas, color = '#CCCCCC') {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = 'destination-out';
+      canvas.style.display = 'block';
+    }
 
-  function setupCanvas(ctx, canvas, color = '#CCCCCC') {
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.globalCompositeOperation = 'destination-out';
-    canvas.style.display = 'block';
-  }
+    function revealCharacter() {
+      if (hasRevealed) return;
+      hasRevealed = true;
+      revealButton.disabled = true;
 
-  function revealCharacter() {
-    if (hasRevealed) return; // ❌ ป้องกันการกดซ้ำ
-    hasRevealed = true;
-
-    const randomImg = images[Math.floor(Math.random() * images.length)];
-    img.src = randomImg;
-    img.style.display = 'block';
-
-    setupCanvas(ctx1, canvas1, '#CCCCCC');
-    setupCanvas(ctx2, canvas2, '#999999');
-
-    currentScratchStage = 1;
-    revealedPixels1 = 0;
-    revealedPixels2 = 0;
-  }
-
-  function playScratchSound() {
-    try {
+      // Unlock audio context with a user gesture
       scratchSound.currentTime = 0;
-      scratchSound.play();
-    } catch (e) {
-      console.warn("เสียงยังไม่สามารถเล่นได้ตอนนี้");
+      scratchSound.play().catch(() => {});
+
+      // Pick random character image
+      const randomImg = images[Math.floor(Math.random() * images.length)];
+      img.onload = () => {
+        img.style.display = 'block';
+        setupCanvas(ctx1, canvas1, '#CCCCCC');
+        setupCanvas(ctx2, canvas2, '#999999');
+      };
+      img.src = randomImg;
+
+      currentScratchStage = 1;
+      revealedPixels1 = 0;
+      revealedPixels2 = 0;
     }
-  }
 
-  function handleScratch(e, canvas, ctx, stage) {
-    if (!isDrawing || !hasRevealed) return;
+    function playScratchSound() {
+      scratchSound.currentTime = 0;
+      scratchSound.play().catch(() => {});
+    }
 
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
-    ctx.beginPath();
-    ctx.arc(x, y, 20, 0, 2 * Math.PI);
-    ctx.fill();
-
-    playScratchSound();
-
-    if (stage === 1) {
-      revealedPixels1++;
-      if (revealedPixels1 > 500) {
-        canvas1.style.display = 'none';
-        currentScratchStage = 2;
-      }
-    } else if (stage === 2) {
-      revealedPixels2++;
-      if (revealedPixels2 > 500) {
-        canvas2.style.display = 'none';
+    function handleScratch(e, canvas, ctx, stage) {
+      if (!isDrawing || !hasRevealed) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, 2 * Math.PI);
+      ctx.fill();
+      playScratchSound();
+      if (stage === 1) {
+        revealedPixels1++;
+        if (revealedPixels1 > 500) {
+          canvas1.style.display = 'none';
+          currentScratchStage = 2;
+        }
+      } else {
+        revealedPixels2++;
+        if (revealedPixels2 > 500) {
+          canvas2.style.display = 'none';
+        }
       }
     }
-  }
 
-  // mouse + touch events
-  [canvas1, canvas2].forEach((canvas, index) => {
-    const ctx = index === 0 ? ctx1 : ctx2;
-    canvas.addEventListener('mousedown', () => (isDrawing = true));
-    canvas.addEventListener('mouseup', () => (isDrawing = false));
-    canvas.addEventListener('mousemove', (e) => handleScratch(e, canvas, ctx, index + 1));
-
-    canvas.addEventListener('touchstart', () => (isDrawing = true));
-    canvas.addEventListener('touchend', () => (isDrawing = false));
-    canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      handleScratch(e, canvas, ctx, index + 1);
+    // Attach mouse & touch events
+    [canvas1, canvas2].forEach((canvas, index) => {
+      const ctx = index === 0 ? ctx1 : ctx2;
+      canvas.addEventListener('mousedown', () => (isDrawing = true));
+      canvas.addEventListener('mouseup', () => (isDrawing = false));
+      canvas.addEventListener('mousemove', (e) => handleScratch(e, canvas, ctx, index + 1));
+      canvas.addEventListener('touchstart', () => (isDrawing = true));
+      canvas.addEventListener('touchend', () => (isDrawing = false));
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        handleScratch(e, canvas, ctx, index + 1);
+      });
     });
-  });
-</script>
+  </script>
 </body>
 </html>
