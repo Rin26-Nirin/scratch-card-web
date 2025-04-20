@@ -43,4 +43,149 @@
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 2
+      z-index: 2;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background: #333;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>ขูดดูว่าคุณได้ตัวละครอะไร</h1>
+  <button onclick="revealCharacter()">สุ่มตัวละคร</button>
+
+  <div id="scratch-container">
+    <img id="character-img" src="images/placeholder.jpg" alt="Character" />
+    <canvas id="scratch-canvas-2"></canvas> <!-- รอบที่ 2 -->
+    <canvas id="scratch-canvas-1"></canvas> <!-- รอบที่ 1 -->
+  </div>
+
+  <script>
+    const images = [
+      'https://i.pinimg.com/736x/ca/d1/91/cad191b61f65458fcc687c9874793122.jpg',
+      'https://i.pinimg.com/736x/8e/ac/e1/8eace192a4dca9dba5b25c6a8e7b2dc1.jpg',
+      'https://i.pinimg.com/736x/f3/72/77/f3727751489bd9a8fd41e770130d633c.jpg'
+    ];
+
+    const scratchSound = document.getElementById('scratch-sound');
+    let isDrawing = false;
+    let currentScratchStage = 1; // เริ่มที่รอบแรก
+    let revealedPixels1 = 0;
+    let revealedPixels2 = 0;
+
+    const canvas1 = document.getElementById('scratch-canvas-1');
+    const canvas2 = document.getElementById('scratch-canvas-2');
+    const ctx1 = canvas1.getContext('2d');
+    const ctx2 = canvas2.getContext('2d');
+    const img = document.getElementById('character-img');
+    const container = document.getElementById('scratch-container');
+
+    function playScratchSound() {
+      scratchSound.currentTime = 0;
+      scratchSound.play();
+    }
+
+    function setupCanvas(ctx, canvas, color = '#CCCCCC') {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = 'destination-out';
+      canvas.style.display = 'block';
+    }
+
+    function revealCharacter() {
+      const randomImg = images[Math.floor(Math.random() * images.length)];
+      img.src = randomImg;
+      img.style.display = 'block';
+
+      // ตั้งค่า canvas ของรอบแรกและรอบที่สอง
+      setupCanvas(ctx1, canvas1, '#CCCCCC');
+      setupCanvas(ctx2, canvas2, '#999999');
+
+      currentScratchStage = 1;
+      revealedPixels1 = 0;
+      revealedPixels2 = 0;
+
+      // รีเซ็ตการขูด
+      isDrawing = false; 
+      canvas1.style.display = 'block';
+      canvas2.style.display = 'block';
+
+      // แสดงภาพซิลูเอต
+      img.style.display = 'none';
+    }
+
+    function handleScratch(e, canvas, ctx, stage) {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      playScratchSound(); // ✨ เล่นเสียงเมื่อขูด
+
+      if (stage === 1) {
+        revealedPixels1++;
+        if (revealedPixels1 > 500) {
+          canvas1.style.display = 'none';
+          currentScratchStage = 2;
+        }
+      } else if (stage === 2) {
+        revealedPixels2++;
+        if (revealedPixels2 > 500) {
+          canvas2.style.display = 'none';
+          // เผยภาพที่เหลือหลังจากขูดครบ
+          img.style.display = 'block';
+        }
+      }
+    }
+
+    // mouse events
+    [canvas1, canvas2].forEach((canvas, index) => {
+      const ctx = index === 0 ? ctx1 : ctx2;
+      canvas.addEventListener('mousedown', () => {
+        isDrawing = true;
+        // เมื่อเริ่มขูดใหม่ กำหนดให้การขูดทำงานได้
+      });
+      canvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+        // เมื่อหยุดขูด
+      });
+      canvas.addEventListener('mousemove', (e) => handleScratch(e, canvas, ctx, index + 1));
+
+      // touch events
+      canvas.addEventListener('touchstart', () => {
+        isDrawing = true;
+        // เมื่อเริ่มขูดใหม่ กำหนดให้การขูดทำงานได้
+      });
+      canvas.addEventListener('touchend', () => {
+        isDrawing = false;
+        // เมื่อหยุดขูด
+      });
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        handleScratch(e, canvas, ctx, index + 1);
+      });
+    });
+  </script>
+
+  <audio id="scratch-sound" src="scratch.mp3" preload="auto"></audio>
+</body>
+</html>
