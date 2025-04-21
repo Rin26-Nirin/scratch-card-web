@@ -61,11 +61,6 @@
       background: #555;
     }
 
-    audio {
-      margin-bottom: 20px;
-      width: 300px;
-      outline: none;
-    }
   </style>
 </head>
 <body>
@@ -140,11 +135,6 @@
       revealedPixels2 = 0;
     }
 
-    function playScratchSound() {
-      scratchSound.currentTime = 0;
-      scratchSound.play().catch(() => {});
-    }
-
     function handleScratch(e, canvas, ctx, stage) {
       if (!isDrawing || !hasRevealed) return;
       const rect = canvas.getBoundingClientRect();
@@ -182,11 +172,5 @@
       });
     });
   </script>
-
-  <audio id="scratch-sound" preload="auto">
-  <source src="https://raw.githubusercontent.com/Rin26-Nirin/scratch-card-web/main/card_scratch.mp3" type="audio/mpeg" />
-  Your browser does not support the audio element.
-</audio>
-
 </body>
 </html>
