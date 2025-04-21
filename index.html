@@ -19,8 +19,10 @@
 
     #scratch-container {
       position: relative;
-      width: 300px;
-      height: 400px;
+      width: 100%;
+      max-width: 320px; /* ปรับให้มีขนาดสูงสุดไม่เกิน 320px */
+      height: auto;
+      aspect-ratio: 3/4; /* กำหนดอัตราส่วนของ container ให้เหมาะสม */
       border: 1px solid #ccc;
       border-radius: 12px;
       overflow: hidden;
@@ -60,11 +62,12 @@
       background: #555;
     }
 
-    /* ทำให้หน้าเว็บตอบสนองการแสดงผลกับมือถือ */
+    /* ให้สอดคล้องกับมือถือ */
     @media (max-width: 768px) {
       #scratch-container {
-        width: 80%;
-        height: 300px;
+        width: 80%; /* 80% ของหน้าจอมือถือ */
+        height: auto;
+        max-width: 320px;
       }
     }
   </style>
