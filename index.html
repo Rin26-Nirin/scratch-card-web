@@ -1,115 +1,87 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>เกมขูดดูตัวละคร</title>
   <style>
     body {
       font-family: sans-serif;
       background: #f2f2f2;
       text-align: center;
-      padding: 40px;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
+      padding: 20px;
     }
 
     #scratch-container {
       position: relative;
-      width: 100%;
-      max-width: 400px; /* ปรับขนาดสูงสุด */
-      aspect-ratio: 3/4; /* กำหนดอัตราส่วน */
-      height: auto;
-      border: 1px solid #ccc;
+      width: 300px;
+      height: 400px;
+      margin: 20px auto;
       border-radius: 12px;
       overflow: hidden;
-      background: #eee;
-      margin-top: 20px;
     }
 
     #scratch-container img,
     #scratch-container canvas {
       position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
+      top: 0;
+      left: 0;
       object-fit: cover;
     }
 
     button {
-      padding: 10px 20px;
+      padding: 12px 24px;
       font-size: 16px;
       border: none;
-      background: #333;
+      background-color: #333;
       color: white;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s;
-      margin-bottom: 10px;
     }
 
     button:disabled {
-      background: #aaa;
+      background: #999;
       cursor: not-allowed;
-    }
-
-    button:hover:enabled {
-      background: #555;
-    }
-
-    @media (max-width: 768px) {
-      #scratch-container {
-        width: 80%;
-        max-width: 320px;
-      }
     }
   </style>
 </head>
 <body>
-  <h1>เกมขูดดูตัวละคร</h1>
-  <button id="reveal-btn" onclick="revealCharacter()">สุ่มตัวละคร</button>
-
+  <h1>ขูดดูว่าคุณได้ตัวละครอะไร</h1>
+  <button id="reveal-btn">กดเพื่อสุ่มตัวละครของคุณ</button>
   <div id="scratch-container">
-    <img id="character-img" src="" alt="Character" style="z-index: 1; display: none;" />
-    <canvas id="scratch-canvas-2" style="z-index: 2; display: none;"></canvas>
-    <canvas id="scratch-canvas-1" style="z-index: 3; display: none;"></canvas>
+    <img id="character-img" src="" alt="character" style="display:none; z-index:1;">
+    <canvas id="canvas2" style="z-index:2; display:none;"></canvas>
+    <canvas id="canvas1" style="z-index:3; display:none;"></canvas>
   </div>
 
   <script>
     const images = [
-      'https://i.pinimg.com/736x/ca/d1/91/cad191b61f65458fcc687c9874793122.jpg',
-      'https://i.pinimg.com/736x/8e/ac/e1/8eace192a4dca9dba5b25c6a8e7b2dc1.jpg',
-      'https://i.pinimg.com/736x/f3/72/77/f3727751489bd9a8fd41e770130d633c.jpg'
+      'https://i.pinimg.com/736x/5d/9c/1b/5d9c1baf737a98435be4d841ae002381.jpg',
+      'https://i.pinimg.com/736x/4a/9d/1b/4a9d1b42f029b1f015d0994040c92f9b.jpg',
+      'https://i.pinimg.com/736x/f1/61/fd/f161fd35f9876e48249bc8fa921f646a.jpg',
+      'https://i.pinimg.com/736x/42/79/f7/4279f797ffecfc40da7bf09aad023da4.jpg',
+      'https://i.pinimg.com/736x/67/76/53/67765303398140f138ea920d1b644c55.jpg',
+      'https://i.pinimg.com/474x/ce/04/a6/ce04a661085ce8fb71125e7d2d07ba18.jpg'
     ];
+
+    const btn = document.getElementById('reveal-btn');
+    const img = document.getElementById('character-img');
+    const canvas1 = document.getElementById('canvas1');
+    const canvas2 = document.getElementById('canvas2');
+    const container = document.getElementById('scratch-container');
 
     let ctx1, ctx2;
     let isDrawing = false;
-    let hasRevealed = false;
-    let currentScratchStage = 1;
-    let revealedPixels1 = 0;
-    let revealedPixels2 = 0;
-
-    const revealButton = document.getElementById('reveal-btn');
-    const img = document.getElementById('character-img');
-    const canvas1 = document.getElementById('scratch-canvas-1');
-    const canvas2 = document.getElementById('scratch-canvas-2');
-    const scratchSound = new Audio('scratch.mp3');  // เปลี่ยนมาใช้ new Audio แทนการใช้ tag audio
-
-    window.onload = () => {
-      canvas1.style.display = 'none';
-      canvas2.style.display = 'none';
-      img.style.display = 'none';
-    };
+    let stage = 1;
+    let revealed1 = 0, revealed2 = 0;
+    let totalArea;
 
     function setupCanvas(canvas, color) {
       const ctx = canvas.getContext('2d');
-      canvas.width = document.getElementById('scratch-container').clientWidth;
-      canvas.height = document.getElementById('scratch-container').clientHeight;
-      ctx.globalCompositeOperation = 'source-over';
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
       ctx.fillStyle = color;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalCompositeOperation = 'destination-out';
@@ -117,57 +89,64 @@
       return ctx;
     }
 
-    function revealCharacter() {
-      if (hasRevealed) return;
-      hasRevealed = true;
-      revealButton.disabled = true;
-      scratchSound.play().catch(() => {}); // เล่นเสียงขูด
-
-      const randomImg = images[Math.floor(Math.random() * images.length)];
-      img.onload = () => {
-        img.style.display = 'block';
-        setTimeout(() => {
-          ctx1 = setupCanvas(canvas1, '#CCCCCC');
-          ctx2 = setupCanvas(canvas2, '#999999');
-        }, 100);
-      };
-      img.src = randomImg;
-    }
-
-    function handleScratch(e, canvas, ctx, stage) {
-      if (!isDrawing || !hasRevealed) return;
+    function handleScratch(e, canvas, ctx, stageNum) {
+      if (!isDrawing) return;
       const rect = canvas.getBoundingClientRect();
       const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
       const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
       ctx.beginPath();
-      ctx.arc(x, y, 20, 0, 2 * Math.PI);
+      ctx.arc(x, y, 20, 0, Math.PI * 2);
       ctx.fill();
 
-      if (stage === 1) {
-        revealedPixels1++;
-        if (revealedPixels1 > 500) {
-          canvas1.style.display = 'none';
-          currentScratchStage = 2;
-        }
-      } else {
-        revealedPixels2++;
-        if (revealedPixels2 > 500) {
-          canvas2.style.display = 'none';
-        }
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let cleared = 0;
+      for (let i = 3; i < pixels.length; i += 4) {
+        if (pixels[i] === 0) cleared++;
+      }
+
+      const ratio = cleared / (pixels.length / 4);
+
+      if (stageNum === 1 && ratio > 0.5) {
+        canvas1.style.display = 'none';
+        stage = 2;
+      }
+
+      if (stageNum === 2 && ratio > 0.5) {
+        canvas2.style.display = 'none';
       }
     }
 
-    [canvas1, canvas2].forEach((canvas, index) => {
-      const ctx = index === 0 ? ctx1 : ctx2;
-      canvas.addEventListener('mousedown', () => (isDrawing = true));
-      canvas.addEventListener('mouseup', () => (isDrawing = false));
-      canvas.addEventListener('mousemove', (e) => handleScratch(e, canvas, ctx, index + 1));
-      canvas.addEventListener('touchstart', () => (isDrawing = true));
-      canvas.addEventListener('touchend', () => (isDrawing = false));
-      canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        handleScratch(e, canvas, ctx, index + 1);
+    ['mousedown', 'touchstart'].forEach(evt => {
+      [canvas1, canvas2].forEach(canvas => {
+        canvas.addEventListener(evt, () => isDrawing = true);
       });
+    });
+    ['mouseup', 'touchend'].forEach(evt => {
+      [canvas1, canvas2].forEach(canvas => {
+        canvas.addEventListener(evt, () => isDrawing = false);
+      });
+    });
+    ['mousemove', 'touchmove'].forEach(evt => {
+      [canvas1, canvas2].forEach((canvas, i) => {
+        canvas.addEventListener(evt, (e) => {
+          e.preventDefault();
+          if (stage === i + 1) {
+            handleScratch(e, canvas, i === 0 ? ctx1 : ctx2, i + 1);
+          }
+        });
+      });
+    });
+
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      const randomImg = images[Math.floor(Math.random() * images.length)];
+      img.src = randomImg;
+      img.onload = () => {
+        img.style.display = 'block';
+        ctx2 = setupCanvas(canvas2, '#888');
+        ctx1 = setupCanvas(canvas1, '#bbb');
+        stage = 1;
+      };
     });
   </script>
 </body>
