@@ -126,12 +126,13 @@
       // Pick random character image
       const randomImg = images[Math.floor(Math.random() * images.length)];
       img.onload = () => {
-        img.style.display = 'block';
-         setTimeout(() => {
-        setupCanvas(ctx1, canvas1, '#CCCCCC');
-        setupCanvas(ctx2, canvas2, '#999999');
-        }, 100); // รอ 100ms ให้ DOM render ภาพก่อน
-      };
+  img.style.display = 'block';
+  setTimeout(() => {
+    ctx1 = setupCanvas(canvas1, '#CCCCCC');
+    ctx2 = setupCanvas(canvas2, '#999999');
+  }, 100);
+};
+
       img.src = randomImg;
 
       currentScratchStage = 1;
