@@ -125,8 +125,10 @@
       const randomImg = images[Math.floor(Math.random() * images.length)];
       img.onload = () => {
         img.style.display = 'block';
+         setTimeout(() => {
         setupCanvas(ctx1, canvas1, '#CCCCCC');
         setupCanvas(ctx2, canvas2, '#999999');
+        }, 100); // รอ 100ms ให้ DOM render ภาพก่อน
       };
       img.src = randomImg;
 
@@ -172,5 +174,8 @@
       });
     });
   </script>
+
+  <audio id="scratch-sound" src="scratch.mp3" preload="auto"></audio>
+
 </body>
 </html>
