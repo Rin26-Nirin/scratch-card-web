@@ -80,12 +80,11 @@
       'https://i.pinimg.com/736x/f3/72/77/f3727751489bd9a8fd41e770130d633c.jpg'
     ];
 
+    let ctx1, ctx2; // ใช้ let เพื่อให้เปลี่ยนค่าทีหลังได้
     const revealButton = document.getElementById('reveal-btn');
     const img = document.getElementById('character-img');
     const canvas1 = document.getElementById('scratch-canvas-1');
     const canvas2 = document.getElementById('scratch-canvas-2');
-    const ctx1 = canvas1.getContext('2d');
-    const ctx2 = canvas2.getContext('2d');
     const scratchSound = document.getElementById('scratch-sound');
     const container = document.getElementById('scratch-container');
 
