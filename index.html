@@ -103,6 +103,7 @@
     };
 
     function setupCanvas(ctx, canvas, color = '#CCCCCC') {
+      const ctx = canvas.getContext('2d');
       canvas.width = container.clientWidth;
       canvas.height = container.clientHeight;
       ctx.globalCompositeOperation = 'source-over';
@@ -110,6 +111,7 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalCompositeOperation = 'destination-out';
       canvas.style.display = 'block';
+      return ctx; // return context
     }
 
     function revealCharacter() {
